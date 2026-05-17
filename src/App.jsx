@@ -10,13 +10,25 @@ export default function ActivityTracker() {
     { name: 'No Fap', target: 'Daily', completed: false },
   ];
 
+  const today = new Date().toISOString().split('T')[0];
+
+  const [monthlyData, setMonthlyData] = useState(() => {
+    const saved = localStorage.getItem('monthlyData');
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const [activities, setActivities] = useState(() => {
-    const saved = localStorage.getItem('activities');
-    return saved ? JSON.parse(saved) : defaultActivities;
+    return monthlyData[today] || defaultActivities;
   });
 
   useEffect(() => {
-    localStorage.setItem('activities', JSON.stringify(activities));
+    const updatedMonthlyData = {
+      ...monthlyData,
+      [today]: activities,
+    };
+
+    setMonthlyData(updatedMonthlyData);
+    localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
   }, [activities]);
 
   const toggleActivity = (index) => {
@@ -30,7 +42,11 @@ export default function ActivityTracker() {
     (completedCount / activities.length) * 100
   );
 
-  const streak = completionPercentage === 100 ? 1 : 0;
+  const streak = Object.values(monthlyData).filter(
+    (day) => day.every((a) => a.completed)
+  ).length;
+
+  const monthlyCompletion = Object.keys(monthlyData).length;
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -43,7 +59,7 @@ export default function ActivityTracker() {
           Track your discipline and daily consistency.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-2xl shadow-md p-5 text-center">
             <h2 className="text-xl font-bold">Completed</h2>
             <p className="text-3xl mt-2">
@@ -58,8 +74,7 @@ export default function ActivityTracker() {
 
           <div className="bg-white rounded-2xl shadow-md p-5 text-center">
             <h2 className="text-xl font-bold">Current Streak</h2>
-            <p className="text-3xl mt-2">{streak} 🔥</p>
-          </div>
+            <p class
         </div>
 
         <div className="w-full bg-gray-300 rounded-full h-5 mb-8 overflow-hidden">
